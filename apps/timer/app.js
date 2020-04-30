@@ -2,11 +2,9 @@ let counter = 0;
 let setValue = 0;
 let counterInterval;
 let buzzInterval;
-let resetLastReleaseTimeTimeout;
 const DEBUG = true;
 
-const APP_TITLE = "TIMER";
-const DEBOUNCE = 100;
+const DEBOUNCE = 50;
 
 function buzzAndBeep() {
   Bangle.buzz(1e3, 1).then(() => {
@@ -15,7 +13,10 @@ function buzzAndBeep() {
 }
 
 function outOfTime() {
-  E.showMessage("Time's up\n\nBTN1 to restart", APP_TITLE);
+  g.clearRect(0, 0, 220, 70);
+  g.setFontAlign(0, 0);
+  g.setFont("6x8", 3);
+  g.drawString("Time's UP!", 120, 50);
   buzzAndBeep();
   buzzInterval = setInterval(buzzAndBeep, 5000);
 }
@@ -24,10 +25,14 @@ function draw() {
   const minutes = Math.floor(counter / 60);
   const seconds = counter - minutes * 60;
   const seconds2Digits = seconds < 10 ? `0${seconds}` : seconds.toString();
-  g.clear();
+  g.clearRect(0, 70, 220, 160);
   g.setFontAlign(0, 0);
   g.setFont("6x8", 7);
-  g.drawString(`${minutes}:${seconds2Digits}`, 120, 120);
+  g.drawString(
+    `${minutes < 10 ? "0" : ""}${minutes}:${seconds2Digits}`,
+    120,
+    120
+  );
 }
 
 function countDown() {
@@ -57,58 +62,15 @@ function clearIntervals() {
   }
 }
 
-let lastReleaseTime = 0;
-const THRESHOLD1 = 3000;
-const THRESHOLD2 = 5000;
-function getDelta() {
-  const now = Date.now();
-  if (lastReleaseTime === 0) lastReleaseTime = Date.now();
-  const keyDownDuration = now - lastReleaseTime;
-  if (DEBUG) console.log("keyDownDuration", keyDownDuration);
-  if (keyDownDuration < THRESHOLD1) {
-    return 1;
-  } else if (keyDownDuration < THRESHOLD2) {
-    return 10;
-  } else {
-    return 30;
-  }
-}
-
-function handleBtnPress(btn, cb) {
-  setTimeout(() => {
-    if (btn.read()) {
-      if (resetLastReleaseTimeTimeout)
-        clearTimeout(resetLastReleaseTimeTimeout);
-      cb();
-    } else {
-      resetLastReleaseTimeTimeout = setTimeout(() => {
-        lastReleaseTime = Date.now();
-      }, 1000);
-    }
-  }, DEBOUNCE);
-}
-
-function increaseTimer() {
+function set(delta) {
   if (state === "started") return;
   if (DEBUG) console.log("increase");
-  const delta = getDelta();
   counter += delta;
   if (state === "unset") {
     state = "set";
   }
   draw();
   g.flip();
-  handleBtnPress(BTN5, increaseTimer);
-}
-
-function decreaseTimer() {
-  if (state === "started") return;
-  if (DEBUG) console.log("decrease");
-  const delta = getDelta();
-  counter = Math.max(0, counter - delta);
-  draw();
-  g.flip();
-  handleBtnPress(BTN4, decreaseTimer);
 }
 
 function startTimer() {
@@ -138,24 +100,33 @@ function changeState() {
 function reset(value) {
   if (DEBUG) console.log("reset");
   counter = value;
-  clearIntervals();
   draw();
+  clearIntervals();
 }
 
 reset(0);
 
 clearWatch();
 setWatch(changeState, BTN1, { debounce: 1000, repeat: true, edge: "falling" });
-setWatch(decreaseTimer, BTN4, {
+setWatch(() => reset(0), BTN3, {
+  debounce: DEBOUNCE,
+  repeat: true,
+  edge: "falling"
+});
+setWatch(() => set(60), BTN4, {
   debounce: DEBOUNCE,
   repeat: true
 });
-setWatch(increaseTimer, BTN5, {
+setWatch(() => set(1), BTN5, {
   debounce: DEBOUNCE,
   repeat: true
 });
 
-E.showMessage(
-  "Tap right, time UP\n\nleft time DOWN,\n\n BTN1 to start/stop",
-  APP_TITLE
-);
+g.clear();
+g.setFontAlign(-1, 0);
+g.setFont("6x8", 7);
+g.drawString(`+  +`, 35, 180);
+g.setFontAlign(0, 0, 3);
+g.setFont("6x8", 1);
+g.drawString(`reset                   (re)start`, 230, 120);
+draw();
