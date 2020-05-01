@@ -2586,7 +2586,7 @@
     "id": "bigclock",
     "name": "Big Clock",
     "icon": "bigclock.png",
-    "version": "0.11.3",
+    "version": "0.12",
     "description": "A readable and informational digital watch, with date, seconds and moon phase",
     "tags": "clock",
     "type": "clock",
@@ -2599,6 +2599,15 @@
       {
         "name": "bigclock.img",
         "url": "bigclock-icon.js",
+        "evaluate": true
+      },
+      {
+        "name": "bigclock.settings.js",
+        "url": "settings.js"
+      },
+      {
+        "name": "bigclock.json",
+        "url": "bigclock.json",
         "evaluate": true
       }
     ]

@@ -8,6 +8,12 @@ const moonR = 12;
 const moonX = 215;
 const moonY = 50;
 
+const settings = require("Storage").readJSON("bigclock.json", 1);
+const BTN1app = settings.BTN1;
+const BTN3app = settings.BTN3;
+console.log("BTN1app", BTN1app);
+console.log("BTN3app", BTN3app);
+
 function drawMoon(d) {
   const BLACK = 0,
     MOON = 0x41f,
@@ -170,7 +176,14 @@ clearWatch();
 setWatch(Bangle.showLauncher, BTN2, { repeat: false, edge: "falling" });
 setWatch(
   function() {
-    load("calendar.app.js");
+    load(BTN1app);
+  },
+  BTN1,
+  { repeat: false, edge: "rising" }
+);
+setWatch(
+  function() {
+    load(BTN3app);
   },
   BTN3,
   { repeat: false, edge: "rising" }
